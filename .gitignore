@@ -1,0 +1,23 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# API keys — never commit these
+*.key
+secrets.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node (if you add a build step later)
+node_modules/
+dist/
+.netlify/
+.vercel/
