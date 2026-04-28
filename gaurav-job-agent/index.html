@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GK · AI Job Application Agent</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">GK</div>
+    <div class="header-info">
+      <h1>AI Job Application Agent</h1>
+      <p>gaurav.kumar · DevOps &amp; TPM · Bengaluru, India</p>
+    </div>
+    <div class="status-pill">
+      <div class="dot"></div>
+      <span id="agentStatus">agent online</span>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="search">Job Search</button>
+    <button class="tab" data-tab="apply">Apply to Job</button>
+    <button class="tab" data-tab="coverletter">Cover Letter</button>
+    <button class="tab" data-tab="profile">My Profile</button>
+    <button class="tab" data-tab="log">Application Log</button>
+  </nav>
+
+  <!-- TAB: JOB SEARCH -->
+  <section id="tab-search" class="section active main">
+    <div class="panel">
+      <div class="panel-header"><span>//</span> automated job search — powered by ai</div>
+      <div class="panel-body">
+        <div class="info-banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          This agent searches for DevOps / TPM / Cloud jobs matching Gaurav's profile and generates tailored applications automatically. Uses Claude AI + job board APIs.
+        </div>
+        <div class="input-row">
+          <div class="row3">
+            <div class="field-group">
+              <label>Job Title / Keywords</label>
+              <input type="text" id="searchQuery" value="DevOps Engineer" placeholder="e.g. DevOps Engineer, Cloud Architect" />
+            </div>
+            <div class="field-group">
+              <label>Location</label>
+              <input type="text" id="searchLocation" value="Bengaluru" placeholder="City or Remote" />
+            </div>
+            <div class="field-group">
+              <label>Experience</label>
+              <select id="searchExp">
+                <option>2-4 years</option>
+                <option selected>3-5 years</option>
+                <option>5-8 years</option>
+              </select>
+            </div>
+          </div>
+          <div class="row3">
+            <div class="field-group">
+              <label>Job Type</label>
+              <select id="jobType">
+                <option value="all">All Types</option>
+                <option value="full-time">Full-time</option>
+                <option value="contract">Contract</option>
+                <option value="remote">Remote</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Source</label>
+              <select id="jobSource">
+                <option value="linkedin">LinkedIn Jobs</option>
+                <option value="naukri">Naukri.com</option>
+                <option value="indeed">Indeed</option>
+                <option value="all">All Sources</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Auto-Apply</label>
+              <select id="autoApply">
+                <option value="draft">Draft only (review first)</option>
+                <option value="shortlist">Auto-shortlist matches</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="searchBtn" onclick="searchJobs()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search &amp; Analyze Jobs
+          </button>
+          <button class="btn btn-outline" onclick="clearSearch()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="searchLoading" class="panel" style="display:none">
+      <div class="panel-body" style="padding:30px">
+        <div class="loader">
+          <div class="loader-dots"><span></span><span></span><span></span></div>
+          <span id="searchLoadingMsg">Initializing job search...</span>
+        </div>
+        <div class="progress-log" id="progressLog"></div>
+      </div>
+    </div>
+
+    <div id="searchResults" style="display:none">
+      <div class="results-header">
+        <span id="resultsCount">0 jobs found</span>
+        <div style="display:flex;gap:8px">
+          <button class="quick-btn" onclick="filterResults('all')">All</button>
+          <button class="quick-btn" onclick="filterResults('high')">High Match</button>
+          <button class="quick-btn" onclick="filterResults('medium')">Medium Match</button>
+        </div>
+      </div>
+      <div id="jobCards"></div>
+    </div>
+  </section>
+
+  <!-- TAB: APPLY -->
+  <section id="tab-apply" class="section main">
+    <div class="panel">
+      <div class="panel-header"><span>//</span> manual job application — paste job details</div>
+      <div class="panel-body">
+        <div class="quick-row">
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">quick fill:</span>
+          <button class="quick-btn" onclick="fillSample('devops')">senior devops</button>
+          <button class="quick-btn" onclick="fillSample('tpm')">technical pm</button>
+          <button class="quick-btn" onclick="fillSample('cloud')">cloud architect</button>
+          <button class="quick-btn" onclick="fillSample('api')">api engineer</button>
+        </div>
+        <div class="input-row">
+          <div class="row2">
+            <div class="field-group"><label>Company Name</label><input type="text" id="company" placeholder="e.g. Razorpay, Google, Atlassian"/></div>
+            <div class="field-group"><label>Job Title</label><input type="text" id="jobtitle" placeholder="e.g. Senior DevOps Engineer"/></div>
+          </div>
+          <div class="row2">
+            <div class="field-group"><label>Location</label><input type="text" id="location" placeholder="e.g. Bengaluru / Remote"/></div>
+            <div class="field-group"><label>Experience Required</label>
+              <select id="exp">
+                <option>2-4 years</option><option selected>3-5 years</option>
+                <option>5-8 years</option><option>8+ years</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group"><label>Job Description (paste full JD)</label><textarea id="jd" placeholder="Paste the full job description here..."></textarea></div>
+          <div class="field-group"><label>Special Focus (optional)</label><input type="text" id="note" placeholder="e.g. emphasize Terraform, highlight cost savings, mention IoT project..."/></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="generateApplication()" id="applyBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Generate Full Application
+          </button>
+          <button class="btn btn-outline" onclick="clearApplyForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="outputPanel" style="display:none">
+      <div class="panel-header"><span>//</span> ai-generated application package</div>
+      <div class="panel-body">
+        <div id="applyLoading" style="display:none;padding:20px 0">
+          <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div><span id="applyLoadingMsg">Analyzing job description...</span></div>
+        </div>
+        <div id="resultArea" style="display:none">
+          <p class="section-title">cover letter</p>
+          <div class="cl-output" id="clOutput"></div>
+          <div class="output-actions">
+            <span class="badge badge-ai">generated by claude ai</span>
+            <div style="display:flex;gap:8px">
+              <button class="copy-btn" onclick="copyEl('clOutput')">copy letter</button>
+              <button class="btn btn-green btn-sm" onclick="logApplication('apply')">✓ mark as sent</button>
+            </div>
+          </div>
+          <div style="margin-top:20px">
+            <p class="section-title">auto-filled form data</p>
+            <div class="form-fill-grid" id="formFillArea"></div>
+          </div>
+          <div style="margin-top:16px">
+            <p class="section-title">match analysis &amp; talking points</p>
+            <div class="output-box" id="talkingPoints"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: COVER LETTER -->
+  <section id="tab-coverletter" class="section main">
+    <div class="panel">
+      <div class="panel-header"><span>//</span> cover letter generator</div>
+      <div class="panel-body">
+        <div class="input-row">
+          <div class="row2">
+            <div class="field-group"><label>Company</label><input type="text" id="cl-company" placeholder="Company name"/></div>
+            <div class="field-group"><label>Role</label><input type="text" id="cl-role" placeholder="Job title"/></div>
+          </div>
+          <div class="row2">
+            <div class="field-group"><label>Tone</label>
+              <select id="cl-tone">
+                <option value="professional">Professional &amp; Formal</option>
+                <option value="confident">Confident &amp; Direct</option>
+                <option value="startup">Startup-friendly</option>
+                <option value="technical">Technical-forward</option>
+              </select>
+            </div>
+            <div class="field-group"><label>Focus Area</label><input type="text" id="cl-focus" placeholder="e.g. DevOps achievements, API expertise..."/></div>
+          </div>
+          <div class="field-group"><label>Job Description (optional)</label><textarea id="cl-jd" placeholder="Paste JD for a more tailored letter..."></textarea></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="generateCoverLetter()" id="clBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Write Cover Letter
+          </button>
+        </div>
+        <div id="cl-loading" style="display:none;margin-top:16px">
+          <div class="loader"><div class="loader-dots"><span></span><span></span><span></span></div><span>Crafting your letter...</span></div>
+        </div>
+        <div id="cl-result" style="display:none;margin-top:16px">
+          <div class="cl-output" id="cl-output-text"></div>
+          <div class="output-actions" style="margin-top:10px">
+            <span class="badge badge-ai">claude ai</span>
+            <button class="copy-btn" onclick="copyEl('cl-output-text')">copy to clipboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: PROFILE -->
+  <section id="tab-profile" class="section main">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num">3+</div><div class="stat-label">Years Exp</div></div>
+      <div class="stat-card"><div class="stat-num">15</div><div class="stat-label">Projects</div></div>
+      <div class="stat-card"><div class="stat-num">$200K+</div><div class="stat-label">Budget Managed</div></div>
+      <div class="stat-card"><div class="stat-num">99.9%</div><div class="stat-label">API Uptime</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span>//</span> candidate profile</div>
+      <div class="panel-body">
+        <div class="profile-grid">
+          <div class="profile-field"><label>Full Name</label><div class="val">Gaurav Kumar</div></div>
+          <div class="profile-field"><label>Title</label><div class="val">DevOps Engineer &amp; Technical Project Manager</div></div>
+          <div class="profile-field"><label>Email</label><div class="val">gaurav04099@gmail.com</div></div>
+          <div class="profile-field"><label>Phone</label><div class="val">+91-7986284661</div></div>
+          <div class="profile-field"><label>Location</label><div class="val">Bengaluru, India</div></div>
+          <div class="profile-field"><label>LinkedIn</label><div class="val">linkedin.com/in/gaurav0090</div></div>
+          <div class="profile-field"><label>Employer</label><div class="val">Purusartha Works Pvt. Ltd.</div></div>
+          <div class="profile-field"><label>Since</label><div class="val">Mar 2022 – Present</div></div>
+          <div class="profile-field"><label>Education</label><div class="val">BCA – REVA University (CGPA 7.17, 2021)</div></div>
+          <div class="profile-field"><label>Languages</label><div class="val">English (Professional), Hindi (Native)</div></div>
+        </div>
+        <div style="margin-top:16px"><p class="section-title">cloud &amp; devops skills</p>
+          <div class="skills-list">
+            <span class="skill-tag">AWS Lambda</span><span class="skill-tag">EC2/RDS/S3</span><span class="skill-tag">SQS/SNS</span><span class="skill-tag">DynamoDB</span><span class="skill-tag">CloudWatch</span><span class="skill-tag">IAM</span><span class="skill-tag">Docker</span><span class="skill-tag">Terraform</span><span class="skill-tag">GitHub Actions</span><span class="skill-tag">Jenkins</span><span class="skill-tag">GCP</span><span class="skill-tag">Azure DevOps</span>
+          </div>
+        </div>
+        <div style="margin-top:14px"><p class="section-title">api &amp; security</p>
+          <div class="skills-list">
+            <span class="skill-tag green">IBM ACE</span><span class="skill-tag green">Apigee Edge</span><span class="skill-tag green">REST/SOAP</span><span class="skill-tag green">OAuth 2.0</span><span class="skill-tag green">JWT</span><span class="skill-tag green">HMAC</span><span class="skill-tag green">XML/XSLT</span>
+          </div>
+        </div>
+        <div style="margin-top:14px"><p class="section-title">project management</p>
+          <div class="skills-list">
+            <span class="skill-tag amber">Agile/Scrum</span><span class="skill-tag amber">SAFe</span><span class="skill-tag amber">Kanban</span><span class="skill-tag amber">WBS/RAID</span><span class="skill-tag amber">Jira</span><span class="skill-tag amber">C-Suite Reporting</span>
+          </div>
+        </div>
+        <div style="margin-top:14px"><p class="section-title">key achievements</p>
+          <div class="skills-list">
+            <span class="skill-tag">↑20% CI/CD speed</span><span class="skill-tag">↓80% manual ops</span><span class="skill-tag">↓60% infra cost</span><span class="skill-tag">99.9% uptime</span><span class="skill-tag">100% SLA</span><span class="skill-tag">↓90% errors</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: LOG -->
+  <section id="tab-log" class="section main">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="totalApps">0</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-num" id="sentApps">0</div><div class="stat-label">Sent</div></div>
+      <div class="stat-card"><div class="stat-num" id="draftApps">0</div><div class="stat-label">Drafted</div></div>
+      <div class="stat-card"><div class="stat-num" id="todayApps">0</div><div class="stat-label">Today</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span>//</span> application history</div>
+      <div class="panel-body">
+        <div id="logList"><p class="empty-state">No applications yet. Use Job Search or Apply tab to get started.</p></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script src="js/cv-data.js"></script>
+<script src="js/agent.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
